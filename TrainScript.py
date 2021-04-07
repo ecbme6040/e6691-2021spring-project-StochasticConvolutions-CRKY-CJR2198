@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.metrics import roc_auc_score
-from EfficientNetModel import *
-from utils import *
+from model_files.EfficientNetModel import *
+from utils.utils import *
 from torch.utils.data import *
 import time
 import torch.utils.data.distributed
