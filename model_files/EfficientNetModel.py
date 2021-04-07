@@ -367,16 +367,3 @@ class EffNetb4Stochastic (nn.Module):
         return x
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    global device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    #new = EfficientNet.from_pretrained('efficientnet-b5')
-    import torchsummary
-    new = EffNetb0Stochastic(image_size=(224,224), image_size_hr=(600,600), dropout=0.3).cuda()
-    input = torch.randn(6, 3, 224, 224).cuda(), torch.randn(6, 3, 600, 600).cuda()
-    output = new(input)
-
-    a = 1232131
-
