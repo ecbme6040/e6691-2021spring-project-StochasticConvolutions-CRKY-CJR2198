@@ -7,7 +7,7 @@ from torch.nn import functional as F
 def feature_dim_after_conv (in_size, stride):
     ## function to calculate feature map dimension after strided convolution (for conv2d layers!)
     ## assume square images and convs
-    out_size = int(math.ceil(in_size[0] / stride))
+    out_size = int(math.ceil(in_size[0] / stride)) ##output size is just the input dim size / stride (rounded up to integer)
     return (out_size, out_size)
 
 ##Class for same padding convolution
@@ -24,7 +24,8 @@ class Convolution2dSamePadding(nn.Conv2d):
         self.pad_right = 0
         self.pad_bottom = 0
 
-
+        ## Input shouldn't be None!
+        ## If it is, it'll throw an error (inentionally)
         if input_size != None:
             in_dim = input_size[0]
             kernel_dim = self.weight.shape[3]
@@ -48,30 +49,44 @@ class Convolution2dSamePadding(nn.Conv2d):
                                           self.groups)
 
 class StochasticConv1(nn.Conv2d):
-
+    ## Naive implementation of the stochastic convolution
+    ## standard Conv2d declaration inputs
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=False,
                  input_size=None, output_size=None):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias)
+
+        ## Slice size (random region of image) is determined based on the required output dimension
+        ## No paddding since we assume that the image will be so large that padding will not be necessary
+
         self.output_size = output_size[0]
         self.input_size = input_size[0]
+
+        ## slice size = required random slice of the image to achieve the set output dimensions
         self.slice_size = (self.output_size - 1) * stride + kernel_size
         self.stride = stride
 
     def forward(self, x):
+
+        # randomly select the ending pixel of the random region over which to apply the convolution
         RandomWindowStart = torch.randint(low=self.slice_size, high=x.shape[3], size=(self.out_channels, x.shape[0]))
+
+        # declare output tensor on gpu
         output = torch.cuda.FloatTensor(x.shape[0], self.out_channels, self.output_size, self.output_size)
+
+        # number of output channels to loop over = # output channels
         num_filters = self.out_channels
         num_images = x.shape[0]
 
-        #loop over filters loop over images
+        #loop over channels (3 RGB filters)
         for idx_k in range(0, num_filters):
+            #loop over images
             for idx_i in range(0, num_images):
-                ## create the splice
+
+                ## create the random splice of the image
                 end = RandomWindowStart[idx_k][idx_i]  # end position of random window
                 start = end - self.slice_size  # start position of random window
-                #img_slice = x[idx_i, :, start:end, start:end].unsqueeze(0)  # Image slice for kernel idx
 
-                # conv for this kernel over specified slice
+                # conv for this kernel (3 dim RGB) over random image splice, write to output
                 output[idx_i, idx_k, :, :] = F.conv2d(input=x[idx_i, :, start:end, start:end].unsqueeze(0), weight=self.weight[idx_k, :, :, :].unsqueeze(0),
                                                       stride=self.stride, dilation=self.dilation,
                                                       padding=0, bias=self.bias).squeeze(1)
@@ -80,24 +95,36 @@ class StochasticConv1(nn.Conv2d):
 
 class StochasticConv2(nn.Conv2d):
 
+    ## 2nd attempt at Stochastic Convolution Implementation
+    ## This approach causes the backprop hooks in pytorch to bug!!!!
+    ## standard Conv2d declaration inputs
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=False,
                  input_size=None, output_size=None):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias)
+
+        ## pre-declaration of relevant member variables
+
         self.output_size = output_size[0]
         self.input_size = input_size[0]
+
+        ## slice size = required random slice of the image to achieve the set output dimensions
         self.slice_size = (self.output_size - 1) * stride + kernel_size
         self.stride = stride
         self.in_channels = in_channels
         self.out_channels = out_channels
 
     def forward(self, x):
-
+        # randomly select the ending pixel of the random region over which to apply the convolution
         RandomWindowStart = torch.randint(low=self.slice_size, high=x.shape[3], size=(self.out_channels, x.shape[0])) #(filters, images)
+
+        ## declare output tensor
         output = torch.zeros((x.shape[0], self.out_channels, self.output_size, self.output_size), dtype=torch.float32).cuda()
 
+        ## output channels
         num_filters = self.out_channels
         num_images = x.shape[0]
 
+        ## prepare container for image slice
         image_slice = torch.zeros((x.shape[0], self.in_channels, self.slice_size, self.slice_size), dtype=torch.float32).cuda()
 
 
@@ -109,6 +136,7 @@ class StochasticConv2(nn.Conv2d):
                 start = end - self.slice_size  # start position of random window
                 image_slice[idx_i,:,:,:] = x[idx_i, :, start:end, start:end].unsqueeze(0)  # Image slice for kernel idx
 
+            ## convolve over the random image splce
             output[:, idx_k, :, :] = F.conv2d(input=x[idx_i, :, start:end, start:end].unsqueeze(0),
                                               weight=self.weight[idx_k, :, :, :].unsqueeze(0),
                                               stride=self.stride, dilation=self.dilation,
@@ -117,17 +145,25 @@ class StochasticConv2(nn.Conv2d):
         return output
 
 class StochasticConv3(nn.Conv2d):
-
+    ## 3rd attempt at Stochastic Convolution optimization
+    ## standard Conv2d declaration inputs
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=False,
                  input_size=None, output_size=None):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias)
+
+        ## pre-declaration of relevant member variables
         self.output_size = output_size[0]
         self.input_size = input_size[0]
+
+        ## slice size = required random slice of the image to achieve the set output dimensions
         self.slice_size = (self.output_size - 1) * stride + kernel_size
         self.stride = stride
 
     def forward(self, x):
-        RandomWindowStart = torch.randint(low=self.slice_size, high=x.shape[3], size=(self.out_channels,)) #(filters, images)
+        # randomly select the ending pixel of the random region over which to apply the convolution
+        RandomWindowStart = torch.randint(low=self.slice_size, high=x.shape[3], size=(self.out_channels,)) #(output channels, images)
+
+        ## declare output tensor
         output = torch.cuda.FloatTensor(x.shape[0], self.out_channels, self.output_size, self.output_size).fill_(0)
         num_filters = self.out_channels
 
@@ -136,30 +172,38 @@ class StochasticConv3(nn.Conv2d):
             end = RandomWindowStart[idx_k]  # end position of random window
             start = end - self.slice_size  # start position of random window
 
-            #conv for this kernel over specified slice
+            #conv for this channel (3 filters) over specified slice
             output[:, idx_k, :, :] = F.conv2d(input=x[:, :, start:end, start:end], weight=self.weight[idx_k, :, :, :].unsqueeze(0),
                                                   stride=self.stride, dilation=self.dilation,
                                                   padding=0, bias=self.bias).squeeze(1)
 
-
-
         return output
 
 class StochasticConv4(nn.Module):
+    ## Optimized implementation of the stochastic convolution
+    ## Achieves forward pass inference time of 24ms on Titan RTX
+    ## Use NN module rather than Conv2d
+    ## Save a series of Conv2d objects (1 for each kernel in the layer!)
     def __init__(self, stride, out_channels, kernel_size, output_size=None):
         super(StochasticConv4, self).__init__()
+
         ## Module block ##
         self.StochasticConvBlocks = nn.ModuleList([])
         self.out_channels = output_size[0]
         self.slice_size = (output_size[0] - 1) * stride + kernel_size
 
+        ## 1 Conv2d object per output channel (set of 3 kernels)
         for i in range(0, out_channels):
             self.StochasticConvBlocks.append(nn.Conv2d(in_channels=3, out_channels=1, kernel_size=kernel_size, stride=stride, padding=0,
                                                        bias=False))
     def forward(self, x):
+
+        #randomly select the ending pixel of the random region over which to apply the convolution
         RandomWindowStart = torch.randint(low=self.slice_size, high=x.shape[3], size=(self.out_channels,))
         concat_list = []
 
+        #For each output channel, randomly splice the image batch and call Conv2d over that image batch
+        #Concatenate output rather than writing to empty tensor to avoid on gpu copy ops
         for idx, Conv in enumerate(self.StochasticConvBlocks):
             end = RandomWindowStart[idx]  # end position of random window
             start = end - self.slice_size  # start position of random window
@@ -168,56 +212,6 @@ class StochasticConv4(nn.Module):
 
         return torch.cat(concat_list,axis=1)
 
-class StochasticConv5(nn.Module):
-    def __init__(self, stride, out_channels, kernel_size, output_size=None):
-        super(StochasticConv5, self).__init__()
-        ## High Res Image randomly sliced on CPU prior to being passed to GPU
-
-        ## Module block ##
-        self.StochasticConvBlocks = nn.ModuleList([])
-        self.out_channels = output_size[0]
-
-        for i in range(0, out_channels):
-            self.StochasticConvBlocks.append(nn.Conv2d(in_channels=3, out_channels=1, kernel_size=kernel_size, stride=stride,
-                                                       padding=0,
-                                                       bias=False))
-    def forward(self, x):
-        concat_list = []
-        # input of spec: [batch, channel window, 3, slice_size, slice_size]
-        for idx, Conv in enumerate(self.StochasticConvBlocks):
-            concat_list.append(Conv(x[:, idx, :, start:end, start:end]))
-
-
-        return torch.cat(concat_list,axis=1)
-
-class RandomConv2d(nn.Module):
-    def __init__(self, in_channels, out_channels, out_size, stride, input_size, kernel_size):
-        super(RandomConv2d, self).__init__()
-        self.in_channels = in_channels
-        self.kernel_size = kernel_size
-        self.out_channels = out_channels
-        self.stride = stride
-        self.input_size = input_size
-        self.out_size = out_size[0]
-        self.kernel_weights = nn.Parameter(torch.Tensor(out_channels, in_channels, kernel_size, kernel_size))
-        torch.nn.init.xavier_uniform(self.kernel_weights)
-        self.slice_size = (self.out_size - 1) * stride + kernel_size
-
-    def forward(self, x):
-        RandomWindowStart = torch.randint(low=self.slice_size, high=x.shape[3], size=(self.out_channels, x.shape[0]))
-        output = torch.zeros((x.shape[0], self.out_channels, self.out_size, self.out_size), dtype=torch.float32).cuda()
-        print(x.shape[3] - self.slice_size)
-        print(x.shape[3])
-
-        for idx in range(0, len(RandomWindowStart)):
-            end = RandomWindowStart[idx]  # start position
-            start = end - self.slice_size  # end position
-            print(start)
-            img_slice = x[:, :, start:end, start:end]  # Image slice for kernel idx
-
-            # conv for this kernel over specified slice
-            output[:, idx, :, :] = F.conv2d(input=img_slice, weight=self.kernel_weights[idx, :, :, :].unsqueeze(0), stride=2, dilation=1, padding=0, bias=None).squeeze(1)
-        return output
 
 class DropConnect (nn.Module):
     ## DropConnect class
@@ -283,6 +277,12 @@ class SqueezeExcitationLayer(nn.Module):
                                                        kernel_size=1, stride=1, bias=False)
 
     def forward(self, x):
+
+        ## forward  is adaptive avg pooling
+        ## squeeze
+        ## activation
+        ## unsqeeuze
+        ## excitation x*sigmoid(unsqueezed)
         x_squeeze = F.adaptive_avg_pool2d(x, 1)
         x_squeeze = nn.SiLU()(self.SqueezedConv(x_squeeze))
         x_squeeze = self.UnSqueezedConv(x_squeeze)
@@ -304,6 +304,7 @@ class DepthWiseConv(nn.Module):
         self.DepthwiseBN = nn.BatchNorm2d(num_features=out_channels)
 
     def forward(self, x):
+        # apply depthwise conv, batch norm and swish activation
         x = nn.SiLU()(self.DepthwiseBN(self.DepthWiseConv(x)))
         return x
 
@@ -338,8 +339,10 @@ class InvertedMobileResidualBlock(nn.Module):
                                            kernel_size=kernel_size, stride=stride, bias=False,
                                            input_size=input_size, groups=expanded_channels)
 
+        ## depthwise convolution may have a stride > 1 so we need to recalculate the output feature map dimensions after the convolution
         input_size = feature_dim_after_conv(input_size, stride)
 
+        ## Squeeze excitation layer
         channels_to_squeeze = int(input_channels * squeeze_ratio)
         self.SqueezeExcitation = SqueezeExcitationLayer(in_channels=expanded_channels,
                                                         squeeze_channel=channels_to_squeeze)
@@ -354,21 +357,28 @@ class InvertedMobileResidualBlock(nn.Module):
         self.DropConnect = DropConnect(drop_rate=dropout)
 
     def forward(self, x_in):
+        ## forward function for the inverted residual mobile bottleneck
 
         x = x_in
 
+        ## apply expansion neck if it exists (basically all blocks after the first one)
         if self.ExpandNeck != None:
             x = self.ExpandNeck(x)
 
+        ## all blocks contain depthwise conv
         x = self.DepthWiseConv(x)
 
+        ## apply squeeze and excitation if it has been initialized (all blocks contain excitation)
         if self.SqueezeExcitation != None:
             x = self.SqueezeExcitation(x)
 
+        ## last conv, batch norm and swish activation
         x = nn.SiLU()(self.OutputBN(self.OutputConv(x)))
 
-
-        #skip connect conditions: stride = 1, input channels = output channels (i.e. repeating block)
+        ## apply drop connect which is what gives EffNet stochastic depth
+        ## has to be applied to the final featuremap after block has been processed
+        ## drops entries from the final feature map output of the block with some random probability
+        ## drop connect conditions: stride = 1, input channels = output channels (i.e. repeating block)
         if self.input_channels == self.output_channels and self.stride == 1:
             if self.DropConnect.drop_rate > 0:
                 x = self.DropConnect (x)

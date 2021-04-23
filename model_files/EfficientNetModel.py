@@ -25,13 +25,15 @@ class EffNetb0 (nn.Module):
         input_size = feature_dim_after_conv(image_size, stride=2)
 
         ### define architecture blocks ###
-
         block_list = GetArchitectureBlockList('b0')
 
         self.InvertedResBlocks = build_module_list (block_list, input_size)
 
         #Set drop connect rate now we have created all the blocks
+        ## Official implementation starts with 20% drop connect rate
         drop_rate = 0.2
+
+        ## Drop connect rate scales with the number of blocks as per the official implementation
         for idx, block in enumerate(self.InvertedResBlocks):
             block.DropConnect.set_drop_connect_rate(rate=((drop_rate)*float(idx)/len(self.InvertedResBlocks)))
 
@@ -45,11 +47,16 @@ class EffNetb0 (nn.Module):
 
     def forward (self, input_batch):
 
+        ## forward function
+
+        ## stem of the architecture
         x = nn.SiLU()((self.base_bn(self.base_conv(input_batch))))
 
+        ## forward through backbone
         for idx, resblock in enumerate(self.InvertedResBlocks):
             x = resblock(x)
 
+        ## head of architecture
         x = self.TopBN(self.TopConv(x))
         x = torch.flatten(self.TopAvgPool(x),1)
         x = self.TopDrop(x)
@@ -76,8 +83,11 @@ class EffNetb064 (nn.Module):
 
         self.InvertedResBlocks = build_module_list (block_list, input_size)
 
-        #Set drop connect rate now we have created all the blocks
+        # Set drop connect rate now we have created all the blocks
+        ## Official implementation starts with 20% drop connect rate
         drop_rate = 0.2
+
+        ## Drop connect rate scales with the number of blocks as per the official implementation
         for idx, block in enumerate(self.InvertedResBlocks):
             block.DropConnect.set_drop_connect_rate(rate=((drop_rate)*float(idx)/len(self.InvertedResBlocks)))
 
@@ -90,7 +100,9 @@ class EffNetb064 (nn.Module):
         self.Top = nn.Linear(1280, 1)#num classes
 
     def forward (self, input_batch):
+        ## forward function
 
+        ## stem of the architecture
         x = nn.SiLU()((self.base_bn(self.base_conv(input_batch))))
 
         for idx, resblock in enumerate(self.InvertedResBlocks):
@@ -128,12 +140,15 @@ class EffNetb0Stochastic (nn.Module):
 
         self.InvertedResBlocks = build_module_list (block_list, input_size)
 
-
-        #Set drop connect rate now we have created all the blocks
+        # Set drop connect rate now we have created all the blocks
+        ## Official implementation starts with 20% drop connect rate
         drop_rate = 0.2
+
+        ## Drop connect rate scales with the number of blocks as per the official implementation
         for idx, block in enumerate(self.InvertedResBlocks):
             block.DropConnect.set_drop_connect_rate(rate=((drop_rate)*float(idx)/len(self.InvertedResBlocks)))
 
+        ## head of the architecture
         self.TopConv = Convolution2dSamePadding(in_channels=320, out_channels=1280,
                                                 kernel_size=1, stride=1, input_size=image_size)
         self.TopBN = nn.BatchNorm2d(num_features=1280)
@@ -143,10 +158,14 @@ class EffNetb0Stochastic (nn.Module):
         self.Top = nn.Linear(1280, 1)#num classes
 
     def forward (self, input_batch):
+        ## forward function
+
+        ## stem of the architecture
         x = nn.SiLU()((self.base_bn(self.base_conv(input_batch[0]))))
 
         x_hr = nn.SiLU()((self.base_bn_hr(self.base_conv_hr(input_batch[1]))))
 
+        ## concatenate features at the stem
         x = torch.cat((x, x_hr), 1)
 
         for idx, resblock in enumerate(self.InvertedResBlocks):
@@ -185,9 +204,11 @@ class EffNetb0StochasticSkip (nn.Module):
         self.InvertedResBlocks = build_module_list(block_list, input_size)
         self.HRInvertedResBlocks = build_module_list(block_list, input_size, stop_idx=3)
 
-
-        #Set drop connect rate now we have created all the blocks
+        # Set drop connect rate now we have created all the blocks
+        ## Official implementation starts with 20% drop connect rate
         drop_rate = 0.2
+
+        ## Drop connect rate scales with the number of blocks as per the official implementation
         for idx, block in enumerate(self.InvertedResBlocks):
             block.DropConnect.set_drop_connect_rate(rate=((drop_rate)*float(idx)/len(self.InvertedResBlocks)))
             if idx < len(self.HRInvertedResBlocks):
@@ -201,7 +222,9 @@ class EffNetb0StochasticSkip (nn.Module):
         self.Top = nn.Linear(1280, 1)#num classes
 
     def forward (self, input_batch):
+        ## forward function
 
+        ## stem of the architecture
         x = nn.SiLU()((self.base_bn(self.base_conv(input_batch[0]))))
         x_hr = nn.SiLU()((self.base_bn_hr(self.base_conv_hr(input_batch[1]))))
 
@@ -210,7 +233,7 @@ class EffNetb0StochasticSkip (nn.Module):
             if idx < len(self.HRInvertedResBlocks):
                 x_hr = self.HRInvertedResBlocks[idx](x_hr)
             if idx == len(self.HRInvertedResBlocks)-1:
-                x = torch.cat((x, x_hr),1)
+                x = torch.cat((x, x_hr),1) ## concatenate features mid way thorugh the backbone
 
         x = self.TopBN(self.TopConv(x))
         x = torch.flatten(self.TopAvgPool(x),1)
@@ -247,8 +270,11 @@ class EffNetb0FullStochasticSplit (nn.Module):
         self.InvertedResBlocks = build_module_list(block_list, input_size)
         self.HRInvertedResBlocks = build_module_list(block_list, input_size)
 
-        #Set drop connect rate now we have created all the blocks
+        # Set drop connect rate now we have created all the blocks
+        ## Official implementation starts with 20% drop connect rate
         drop_rate = 0.2
+
+        ## Drop connect rate scales with the number of blocks as per the official implementation
         for idx, block in enumerate(self.InvertedResBlocks):
             block.DropConnect.set_drop_connect_rate(rate=((drop_rate)*float(idx)/len(self.InvertedResBlocks)))
             if idx < len(self.HRInvertedResBlocks):
@@ -269,18 +295,24 @@ class EffNetb0FullStochasticSplit (nn.Module):
         self.Top = nn.Linear(1280 * 2, 1)#num classes
 
     def forward (self, input_batch):
+        ## forward function
 
-        x = nn.SiLU()((self.base_bn(self.base_conv(input_batch[0]))))
-        x_hr = nn.SiLU()((self.base_bn_hr(self.base_conv_hr(input_batch[1]))))
+        ## stem of the architecture
+        x = nn.SiLU()((self.base_bn(self.base_conv(input_batch[0])))) ## low res stem
+        x_hr = nn.SiLU()((self.base_bn_hr(self.base_conv_hr(input_batch[1])))) ## stochastic stem
 
+        ## backbone
         for idx, resblock in enumerate(self.InvertedResBlocks):
             x = resblock(x)
             x_hr = self.HRInvertedResBlocks[idx](x_hr)
 
+        ## high and low res head
         x = self.TopBN_lr(self.TopConv_lr(x))
         x_hr = self.TopBN_hr(self.TopConv_hr(x_hr))
         x = torch.flatten(self.TopAvgPool(x), 1)
         x_hr = torch.flatten(self.TopAvgPool_hr(x_hr),1)
+
+        ## concat features at the head of the architecture
         x = torch.cat((x, x_hr), 1)
 
         x = self.TopDrop(x)
@@ -308,8 +340,11 @@ class EffNetb0PureStochastic (nn.Module):
 
         self.InvertedResBlocks = build_module_list(block_list, input_size)
 
-        #Set drop connect rate now we have created all the blocks
+        # Set drop connect rate now we have created all the blocks
+        ## Official implementation starts with 20% drop connect rate
         drop_rate = 0.2
+
+        ## Drop connect rate scales with the number of blocks as per the official implementation
         for idx, block in enumerate(self.InvertedResBlocks):
             block.DropConnect.set_drop_connect_rate(rate=((drop_rate)*float(idx)/len(self.InvertedResBlocks)))
 
@@ -322,6 +357,9 @@ class EffNetb0PureStochastic (nn.Module):
         self.Top = nn.Linear(1280, 1)#num classes
 
     def forward (self, input_batch):
+        ## forward function
+
+        ## stem of the architecture
         x= nn.SiLU()((self.base_bn_hr(self.base_conv_hr(input_batch[1]))))
 
         for idx, resblock in enumerate(self.InvertedResBlocks):
@@ -353,8 +391,11 @@ class EffNetb4 (nn.Module):
 
         self.InvertedResBlocks = build_module_list(block_list, input_size)
 
-        #Set drop connect rate now we have created all the blocks
+        # Set drop connect rate now we have created all the blocks
+        ## Official implementation starts with 20% drop connect rate
         drop_rate = 0.2
+
+        ## Drop connect rate scales with the number of blocks as per the official implementation
         for idx, block in enumerate(self.InvertedResBlocks):
             block.DropConnect.set_drop_connect_rate(rate=((drop_rate)*float(idx)/len(self.InvertedResBlocks)))
 
@@ -367,7 +408,9 @@ class EffNetb4 (nn.Module):
         self.Top = nn.Linear(1792, 1)#num classes
 
     def forward (self, input_batch):
+        ## forward function
 
+        ## stem of the architecture
         x = nn.SiLU()((self.base_bn(self.base_conv(input_batch))))
 
         for idx, resblock in enumerate(self.InvertedResBlocks):
@@ -406,8 +449,11 @@ class EffNetb4Stochastic (nn.Module):
 
         self.InvertedResBlocks = build_module_list(block_list, input_size)
 
-        #Set drop connect rate now we have created all the blocks
+        # Set drop connect rate now we have created all the blocks
+        ## Official implementation starts with 20% drop connect rate
         drop_rate = 0.2
+
+        ## Drop connect rate scales with the number of blocks as per the official implementation
         for idx, block in enumerate(self.InvertedResBlocks):
             block.DropConnect.set_drop_connect_rate(rate=((drop_rate)*float(idx)/len(self.InvertedResBlocks)))
 
@@ -420,6 +466,9 @@ class EffNetb4Stochastic (nn.Module):
         self.Top = nn.Linear(1792, 1)#num classes
 
     def forward (self, input_batch):
+        ## forward function
+
+        ## stem of the architecture
         x = nn.SiLU()((self.base_bn(self.base_conv(input_batch[0]))))
 
         x_hr = nn.SiLU()((self.base_bn_hr(self.base_conv_hr(input_batch[1]))))
