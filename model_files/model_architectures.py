@@ -1,5 +1,5 @@
 
-from layers import *
+from model_files.layers import *
 from torch import nn
 ## Dictionaries that define the backbones of the b0 and b4 models
 ## Both models have 7 main phases of inverted residual bottleneck blocks

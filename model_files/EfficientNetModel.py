@@ -6,9 +6,9 @@
 
 import torch
 from torch import nn
-from layers import *
-from model_architectures import *
-from utils import *
+from model_files.layers import *
+from model_files.model_architectures import *
+from utils.utils import *
 import time
 
 class EffNetb0 (nn.Module):
@@ -277,7 +277,7 @@ class EffNetb0FullStochasticSplit (nn.Module):
             x = resblock(x)
             x_hr = self.HRInvertedResBlocks[idx](x_hr)
 
-        x = self.TopBN(self.TopConv(x))
+        x = self.TopBN_lr(self.TopConv_lr(x))
         x_hr = self.TopBN_hr(self.TopConv_hr(x_hr))
         x = torch.flatten(self.TopAvgPool(x), 1)
         x_hr = torch.flatten(self.TopAvgPool_hr(x_hr),1)

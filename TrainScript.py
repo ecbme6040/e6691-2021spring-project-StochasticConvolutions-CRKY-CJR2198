@@ -193,13 +193,13 @@ if __name__ == '__main__':
 
     train_df, valid_df = train_test_split(train_df, test_size=0.2, random_state=1337)
 
-    train_dataset = MelaDS(image_folder='data/1024x1024/', dataframe=train_df, global_res=380, high_res=1024)
-    valid_dataset = MelaDS(image_folder='data/1024x1024/', dataframe=valid_df, global_res=380, high_res=1024)
+    train_dataset = MelaDS(image_folder='data/1024x1024/', dataframe=train_df, global_res=224, high_res=1024)
+    valid_dataset = MelaDS(image_folder='data/1024x1024/', dataframe=valid_df, global_res=224, high_res=1024)
     train_dataset = DataLoader(train_dataset, batch_size=100, num_workers=10, shuffle=True)
     valid_dataset = DataLoader(valid_dataset, batch_size=200, num_workers=10, shuffle=True)
 
-    train_dataset_lr = MelaDS(image_folder='data/1024x1024/', dataframe=train_df, global_res=380, high_res=None)
-    valid_dataset_lr = MelaDS(image_folder='data/1024x1024/', dataframe=valid_df, global_res=380, high_res=None)
+    train_dataset_lr = MelaDS(image_folder='data/1024x1024/', dataframe=train_df, global_res=224, high_res=None)
+    valid_dataset_lr = MelaDS(image_folder='data/1024x1024/', dataframe=valid_df, global_res=224, high_res=None)
     train_dataset_lr = DataLoader(train_dataset_lr, batch_size=100, num_workers=12, shuffle=True)
     valid_dataset_lr = DataLoader(valid_dataset_lr, batch_size=100, num_workers=12, shuffle=True)
 
@@ -215,7 +215,7 @@ if __name__ == '__main__':
     for i in range(0, train_iterations):
 
         ## create model
-        model = EffNetb4Stochastic(dropout=0.3, image_size=(380, 380), image_size_hr=(1024, 1024))
+        model = EffNetb0FullStochasticSplit(dropout=0.3, image_size=(224, 224), image_size_hr=(1024, 1024))
 
         ## declare optimizer
         optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001, alpha=0.99, eps=1e-08, weight_decay=0.0,
@@ -229,7 +229,7 @@ if __name__ == '__main__':
 
         ## call the training routine
         train(model, train_dataset, valid_dataset, optimizer, loss_obj, stochastic=True,
-              run_name='1024x1024ResultsFinal/b4_stochastic_vs_base/b4_stochastic' + str(i))
+              run_name='test' + str(i))
 
         ## save model
         torch.save(model,'b4_stochastic_full.pth.tar')

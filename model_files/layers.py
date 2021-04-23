@@ -23,7 +23,7 @@ class Convolution2dSamePadding(nn.Conv2d):
         self.pad_top = 0
         self.pad_right = 0
         self.pad_bottom = 0
-        self.out_dim = math.ceil(input_size[0] / self.stride[0]) #output feature map dimension
+
 
         if input_size != None:
             in_dim = input_size[0]
@@ -32,7 +32,7 @@ class Convolution2dSamePadding(nn.Conv2d):
                 pad = max(kernel_dim - stride, 0)
             else:
                 pad = max(kernel_dim - (in_dim % stride), 0)
-
+            self.out_dim = math.ceil(input_size[0] / self.stride[0])  # output feature map dimension
             self.pad_left = pad // 2
             self.pad_top = pad // 2
             self.pad_right = pad - self.pad_left
