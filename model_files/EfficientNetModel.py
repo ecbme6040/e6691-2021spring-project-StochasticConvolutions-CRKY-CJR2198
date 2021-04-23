@@ -219,6 +219,76 @@ class EffNetb0StochasticSkip (nn.Module):
 
         return x
 
+
+### EfficientNet b0 full split architecture ###
+class EffNetb0FullStochasticSplit (nn.Module):
+    def __init__(self, image_size, image_size_hr, dropout):
+        super(EffNetb0FullStochasticSplit, self).__init__()
+        self.InvertedResBlocks = nn.ModuleList([])
+        self.HRInvertedResBlocks = nn.ModuleList([])
+
+        ##start architecture
+        ##stem low res
+        self.base_conv = nn.Conv2d(in_channels=3, out_channels=32, stride=2, kernel_size=3, padding=1)
+        self.base_bn = nn.BatchNorm2d(num_features=32)
+
+        ##stem high res
+        self.base_conv_hr = StochasticConv4(stride=2, out_channels=32, kernel_size=3, output_size=(112, 112))
+        self.base_bn_hr = nn.BatchNorm2d(num_features=32)
+
+
+        ##output size of first conv layer calculation (to calc pad in static padding calc)
+        input_size = feature_dim_after_conv(image_size, stride=2)
+
+        ### define architecture blocks ###
+        block_list = GetArchitectureBlockList('b032')
+
+        ### Full split uses 2 full backbones ###
+        self.InvertedResBlocks = build_module_list(block_list, input_size)
+        self.HRInvertedResBlocks = build_module_list(block_list, input_size)
+
+        #Set drop connect rate now we have created all the blocks
+        drop_rate = 0.2
+        for idx, block in enumerate(self.InvertedResBlocks):
+            block.DropConnect.set_drop_connect_rate(rate=((drop_rate)*float(idx)/len(self.InvertedResBlocks)))
+            if idx < len(self.HRInvertedResBlocks):
+                self.HRInvertedResBlocks[idx].DropConnect.set_drop_connect_rate(rate=((drop_rate) * float(idx) / len(self.InvertedResBlocks)))
+
+        ## combine both at the top of the architecture
+        self.TopConv_lr = Convolution2dSamePadding(in_channels=320, out_channels=1280, kernel_size=1, stride=1, input_size=image_size)
+        self.TopBN_lr = nn.BatchNorm2d(num_features=1280)
+
+        self.TopConv_hr = Convolution2dSamePadding(in_channels=320, out_channels=1280, kernel_size=1, stride=1,
+                                                   input_size=image_size)
+        self.TopBN_hr = nn.BatchNorm2d(num_features=1280)
+
+        self.TopAvgPool = nn.AdaptiveAvgPool2d(1)
+        self.TopAvgPool_hr = nn.AdaptiveAvgPool2d(1)
+
+        self.TopDrop = nn.Dropout(dropout)
+        self.Top = nn.Linear(1280 * 2, 1)#num classes
+
+    def forward (self, input_batch):
+
+        x = nn.SiLU()((self.base_bn(self.base_conv(input_batch[0]))))
+        x_hr = nn.SiLU()((self.base_bn_hr(self.base_conv_hr(input_batch[1]))))
+
+        for idx, resblock in enumerate(self.InvertedResBlocks):
+            x = resblock(x)
+            x_hr = self.HRInvertedResBlocks[idx](x_hr)
+
+        x = self.TopBN(self.TopConv(x))
+        x_hr = self.TopBN_hr(self.TopConv_hr(x_hr))
+        x = torch.flatten(self.TopAvgPool(x), 1)
+        x_hr = torch.flatten(self.TopAvgPool_hr(x_hr),1)
+        x = torch.cat((x, x_hr), 1)
+
+        x = self.TopDrop(x)
+        x = self.Top(x)
+
+        return x
+
+
 ### EfficientNet b0 architecture with only stochastic stem ###
 class EffNetb0PureStochastic (nn.Module):
     def __init__(self, image_size, image_size_hr, dropout):
