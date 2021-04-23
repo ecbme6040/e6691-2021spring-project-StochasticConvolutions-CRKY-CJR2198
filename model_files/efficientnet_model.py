@@ -1,3 +1,11 @@
+### Efficient net model class declaration ###
+
+### In this file I declare efficientnet b0 and b4 model classes along with
+### variants integrating the stochastic convolution approach proposed in the project.
+### The B0 and B4 architectures are implemented through static declaration, I have not implemented the dynamic
+### scaling approach to create models proposed in the original paper since my focus was on integration and evaluation
+### of the stochastic convolution.
+
 
 ## Credits / References:
 ## Official implementation https://github.com/tensorflow/tpu/blob/01574500090fa9c011cb8418c61d442286720211/models/official/efficientnet/efficientnet_model.py#L101-L125
