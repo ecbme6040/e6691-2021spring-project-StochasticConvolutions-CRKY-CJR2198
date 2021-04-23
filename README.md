@@ -35,6 +35,9 @@ The folder 'utils' contains the 'utils.py' file which contains the declaration f
 
 The 'model_validation' folder contains the 'EfficientNetValidation.py' file with the code used to validate the efficientnet implementation.
 
+## Figures
+
+The 'figures' folder contains a sampling of graphed model results.
 
 
 
