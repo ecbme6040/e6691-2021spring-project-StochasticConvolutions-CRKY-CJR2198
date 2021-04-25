@@ -4,7 +4,12 @@ Repository for CRKY Project (CJR2198) 'Stochastic Convolutions for High Resoluti
 
 In this project I propose a novel Convolutional Layer named 'Stochastic Convolution' and architectural guidelines to implement the approach into existing lightweight CNN backbones. The approach achieves significant improvements in classification performance in high resolution dermatological image classification over the EfficientNet-B4 model at less than 50% of the model size.
 
-The graph below demonstrates validation performance improvement of the stochastic convolutional approach to high resolution image classification over EfficientNet B0 and B4 base models evaluated using the ISIC skin lesion dataset on images of size 1024x1024 and greater.
+The graph below demonstrates validation performance improvement of the stochastic convolutional approach to high resolution image classification over EfficientNet B0 and B4 base 
+models evaluated using the ISIC skin lesion dataset on images of size 1024x1024 and greater.
+
+# Key Results
+
+![alt text](https://github.com/ecbme6040/e6691-2021spring-project-StochasticConvolutions-CRKY-CJR2198/blob/main/figures/ValidationResults.png?raw=true)
 
 ![alt text](https://github.com/ecbme6040/e6691-2021spring-project-StochasticConvolutions-CRKY-CJR2198/blob/main/figures/All%20Models%20Compared.jpg?raw=true)
 
@@ -21,7 +26,9 @@ The 'Notebooks' folder contains all Jupyter notebooks used to clean and prepare 
 
 ## Model Files 
 
-The main training loop / script can be found in 'TrainScript.py' in the root.
+All model files can be files can be found within the 'Project Code' sub-directory.
+
+The main training loop / script can be found in 'TrainScript.py'.
 
 The folder 'model_files' contains all model architecture and layer related code:
  
@@ -39,5 +46,7 @@ The 'model_validation' folder contains the 'EfficientNetValidation.py' file with
 
 The 'figures' folder contains a sampling of graphed model results.
 
+## Results
 
+The 'results' folder contains the collected per-epoch results for the model training runs, organized by base model type (B0 or B4). 'Base' folders are the base model runs, the other runs are named corresponding to the model type 'full split','stochastic stem' etc.
 
