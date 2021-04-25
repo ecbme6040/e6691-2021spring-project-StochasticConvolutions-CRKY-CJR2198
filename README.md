@@ -1,8 +1,10 @@
 # e6691-2021Spring-project-StochasticConvolutions-CRKY-CJR2198
 
-Repository for CRKY Project (CJR2198) 'Stochastic Convolutions for High Resolution Image Classification'.
+Repository for CRKY Project (CJR2198) 'Stochastic Convolutions for High Resolution Medical Image Classification'.
 
 In this project I propose a novel Convolutional Layer named 'Stochastic Convolution' and architectural guidelines to implement the approach into existing lightweight CNN backbones. The approach achieves significant improvements in classification performance in high resolution dermatological image classification over the EfficientNet-B4 model at less than 50% of the model size.
+
+The main report can be found in the root of this directory (E6691.2021Spring.CRKY.report.cjr2198_final.pdf).
 
 The graph below demonstrates validation performance improvement of the stochastic convolutional approach to high resolution image classification over EfficientNet B0 and B4 base 
 models evaluated using the ISIC skin lesion dataset on images of size 1024x1024 and greater.
