@@ -1,3 +1,8 @@
+### Main training script & Loop ##
+### Images should be placed in 'data/1024x1024/' subfolder
+### Script is set up to train full split model
+### Author Chris Reekie CJR2198
+
 import pandas as pd
 import numpy as np
 from sklearn.metrics import roc_auc_score
@@ -64,11 +69,12 @@ def train (model, train_loader, valid_loader, optimizer, loss_obj, stochastic=Fa
             if stochastic:
                 images_lr, image_hr, y = batch
                 batch_size = images_lr.shape[0]
-                images = (images_lr.cuda(non_blocking=True), image_hr.cuda(non_blocking=True))
+                images = (images_lr.cuda(non_blocking=True), image_hr.cuda(non_blocking=True)) ## high and low res images
             else:
-                images, y = batch
+                images, y = batch ## else just low res image
                 batch_size = images.shape[0]
 
+            ## set up output
             true_labels = np.append(true_labels, y.cpu().detach().numpy())
             y = torch.unsqueeze(y, 1)
 
@@ -114,7 +120,6 @@ def train (model, train_loader, valid_loader, optimizer, loss_obj, stochastic=Fa
 
         ## Print Performance
         print('Epoch ' + str(epoch) + ' train loss:{loss:.6f}'.format(loss=total_loss) + ' train RoC:{RoC:.4f}'.format(RoC=roc_auc_score(true_labels, probability_preds)) )
-
 
 
         ###### Eval Model ######
@@ -183,35 +188,43 @@ def train (model, train_loader, valid_loader, optimizer, loss_obj, stochastic=Fa
 
 
 if __name__ == '__main__':
+    from sklearn.model_selection import train_test_split
+
+    ### set device to CUDA (GPU)
     global device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    ## import training dataframe ##
     train_df = pd.read_csv('data/1024x1024_train.csv')
 
-    from sklearn.model_selection import train_test_split
-
-
+    ## split data 80/20, always use same split
     train_df, valid_df = train_test_split(train_df, test_size=0.2, random_state=1337)
 
+    ## create train and validation dataset for stochastic stem models (each batch contains low resolution and high resolution image)
     train_dataset = MelaDS(image_folder='data/1024x1024/', dataframe=train_df, global_res=224, high_res=1024)
     valid_dataset = MelaDS(image_folder='data/1024x1024/', dataframe=valid_df, global_res=224, high_res=1024)
     train_dataset = DataLoader(train_dataset, batch_size=100, num_workers=10, shuffle=True)
     valid_dataset = DataLoader(valid_dataset, batch_size=200, num_workers=10, shuffle=True)
 
+    ## create train and validation dataset for base models (only 1 resolution image created)
     train_dataset_lr = MelaDS(image_folder='data/1024x1024/', dataframe=train_df, global_res=224, high_res=None)
     valid_dataset_lr = MelaDS(image_folder='data/1024x1024/', dataframe=valid_df, global_res=224, high_res=None)
     train_dataset_lr = DataLoader(train_dataset_lr, batch_size=100, num_workers=12, shuffle=True)
     valid_dataset_lr = DataLoader(valid_dataset_lr, batch_size=100, num_workers=12, shuffle=True)
 
+    ## describe the dataframes ##
     print(train_df.describe())
     print(train_df['target'].sum())
     print(valid_df.describe())
     print(valid_df['target'].sum())
 
-
+    ## Set number of training iterations
     train_iterations = 5
 
+    ## Turn on cudnn benchmark to automatically choose optimal conv2d low level implementation
     torch.backends.cudnn.benchmark = True
+
+    ## training loop
     for i in range(0, train_iterations):
 
         ## create model
@@ -228,6 +241,7 @@ if __name__ == '__main__':
         model = nn.DataParallel(model).cuda()
 
         ## call the training routine
+        ## set stochastic = True for stochastic stem based models
         train(model, train_dataset, valid_dataset, optimizer, loss_obj, stochastic=True,
               run_name='test' + str(i))
 
