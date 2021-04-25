@@ -1,4 +1,4 @@
-
+## Author: Chris Reekie CJR2198
 ## Script to validate results against official implementation
 
 
