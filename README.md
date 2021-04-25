@@ -53,7 +53,7 @@ The 'results' folder contains the collected per-epoch results for the model trai
 
 ## Directory Treee
 
-'''
+```
 +---figures
 |       All Models Compared.jpg
 |       b0FullSplitVsBaseSpreadFull.jpg
@@ -164,5 +164,5 @@ The 'results' folder contains the collected per-epoch results for the model trai
                 b4_stochastic2_per_epoch.csv
                 b4_stochastic3_per_epoch.csv
                 b4_stochastic4_per_epoch.csv
-'''
+```
 
