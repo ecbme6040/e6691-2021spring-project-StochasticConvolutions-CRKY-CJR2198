@@ -51,7 +51,7 @@ The 'figures' folder contains a sampling of graphed model results.
 The 'results' folder contains the collected per-epoch results for the model training runs, organized by base model type (B0 or B4). 'Base' folders are the base model runs, the other runs are named corresponding to the model type 'full split','stochastic stem' etc.
 
 
-## Directory Treee
+## Directory Tree
 
 ```
 +---figures
