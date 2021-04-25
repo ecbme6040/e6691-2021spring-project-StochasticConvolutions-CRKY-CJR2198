@@ -1,8 +1,10 @@
 # e6691-2021Spring-project-StochasticConvolutions-CRKY-CJR2198
 
-Repository for CRKY Project (CJR2198) 'Stochastic Convolutions for High Resolution Image Classification'.
+Repository for CRKY Project (CJR2198) 'Stochastic Convolutions for High Resolution Medical Image Classification'.
 
 In this project I propose a novel Convolutional Layer named 'Stochastic Convolution' and architectural guidelines to implement the approach into existing lightweight CNN backbones. The approach achieves significant improvements in classification performance in high resolution dermatological image classification over the EfficientNet-B4 model at less than 50% of the model size.
+
+The main report can be found in the root of this directory (E6691.2021Spring.CRKY.report.cjr2198_final.pdf).
 
 The graph below demonstrates validation performance improvement of the stochastic convolutional approach to high resolution image classification over EfficientNet B0 and B4 base 
 models evaluated using the ISIC skin lesion dataset on images of size 1024x1024 and greater.
@@ -51,9 +53,9 @@ The 'figures' folder contains a sampling of graphed model results.
 The 'results' folder contains the collected per-epoch results for the model training runs, organized by base model type (B0 or B4). 'Base' folders are the base model runs, the other runs are named corresponding to the model type 'full split','stochastic stem' etc.
 
 
-## Directory Treee
+## Directory Tree
 
-'''
+```
 +---figures
 |       All Models Compared.jpg
 |       b0FullSplitVsBaseSpreadFull.jpg
@@ -164,5 +166,5 @@ The 'results' folder contains the collected per-epoch results for the model trai
                 b4_stochastic2_per_epoch.csv
                 b4_stochastic3_per_epoch.csv
                 b4_stochastic4_per_epoch.csv
-'''
+```
 
