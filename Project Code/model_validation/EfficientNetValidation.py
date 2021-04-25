@@ -5,7 +5,6 @@
 import tensorflow as tf
 import pandas as pd
 from tensorflow.keras.layers.experimental import preprocessing
-from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.applications import *
