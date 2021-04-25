@@ -1,4 +1,5 @@
 ### Efficient net model class declaration ###
+### Author: Chris Reekie CJR2198
 
 ### In this file I declare efficientnet b0 and b4 model classes along with
 ### variants integrating the stochastic convolution approach proposed in the project.

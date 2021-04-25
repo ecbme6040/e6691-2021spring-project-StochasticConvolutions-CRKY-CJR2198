@@ -1,3 +1,6 @@
+### File Containing declaration of all layers used in efficientnet models
+### Author: Chris Reekie CJR2198
+
 import torch
 from torch import nn
 import math
@@ -7,6 +10,7 @@ from torch.nn import functional as F
 def feature_dim_after_conv (in_size, stride):
     ## function to calculate feature map dimension after strided convolution (for conv2d layers!)
     ## assume square images and convs
+    ## takes input size and calculates output feature map size based on stride
     out_size = int(math.ceil(in_size[0] / stride)) ##output size is just the input dim size / stride (rounded up to integer)
     return (out_size, out_size)
 
@@ -15,6 +19,7 @@ class Convolution2dSamePadding(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=False,
                  input_size=None):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias)
+        # Standard Conv2d inputs
 
         # Padding is calculated in constructor at initialization to avoid having to calculate it in the forward pass
         # Using an identical approach to static pad as in tensorflow for 'same' padding
@@ -34,9 +39,9 @@ class Convolution2dSamePadding(nn.Conv2d):
             else:
                 pad = max(kernel_dim - (in_dim % stride), 0)
             self.out_dim = math.ceil(input_size[0] / self.stride[0])  # output feature map dimension
-            self.pad_left = pad // 2
+            self.pad_left = pad // 2 ## round up to integer
             self.pad_top = pad // 2
-            self.pad_right = pad - self.pad_left
+            self.pad_right = pad - self.pad_left ##padding for same pad
             self.pad_bottom = pad - self.pad_top
 
     def forward(self, x):
@@ -54,6 +59,7 @@ class StochasticConv1(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=False,
                  input_size=None, output_size=None):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias)
+        # Standard Conv2d inputs
 
         ## Slice size (random region of image) is determined based on the required output dimension
         ## No paddding since we assume that the image will be so large that padding will not be necessary
@@ -101,6 +107,7 @@ class StochasticConv2(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=False,
                  input_size=None, output_size=None):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias)
+        # Standard Conv2d inputs
 
         ## pre-declaration of relevant member variables
 
@@ -150,6 +157,7 @@ class StochasticConv3(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=False,
                  input_size=None, output_size=None):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias)
+        # Standard Conv2d inputs
 
         ## pre-declaration of relevant member variables
         self.output_size = output_size[0]
@@ -186,6 +194,8 @@ class StochasticConv4(nn.Module):
     ## Save a series of Conv2d objects (1 for each kernel in the layer!)
     def __init__(self, stride, out_channels, kernel_size, output_size=None):
         super(StochasticConv4, self).__init__()
+        #inputs are stride, output channels, kernel_size and output size
+
 
         ## Module block ##
         self.StochasticConvBlocks = nn.ModuleList([])
@@ -222,7 +232,9 @@ class DropConnect (nn.Module):
 
     def __init__(self, drop_rate = 0):
         super(DropConnect, self).__init__()
+        #input is drop connect rate
         self.drop_rate = drop_rate
+
 
     def set_drop_connect_rate (self, rate=0): ## set the drop rate, needs to be done after all blocks have been added
         self.drop_rate = rate

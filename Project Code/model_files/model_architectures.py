@@ -1,6 +1,9 @@
+## File contains dictionaries that define the model architectures
+## Author: Chris Reekie CJR2198
 
 from model_files.layers import *
 from torch import nn
+
 ## Dictionaries that define the backbones of the b0 and b4 models
 ## Both models have 7 main phases of inverted residual bottleneck blocks
 ## Differ in number of block repeats (depth), channels (width) and resolution
@@ -149,6 +152,9 @@ def GetArchitectureBlockList (model_name):
     return block_list
 
 def build_module_list (block_list, input_size, stop_idx=99):
+    ## function builds module list from input dictionary (backbone of EffNet architecture)
+    ## If stop_idx < number of modules then architecture is stochastic skip
+    ## Used to build backbone for both high and low resolution backbones
     InvertedResBlocks = nn.ModuleList([])
 
     for idx, block in enumerate(block_list):
@@ -159,16 +165,16 @@ def build_module_list (block_list, input_size, stop_idx=99):
                                         output_channels=block['output_channels'], kernel_size=block['kernel_size'],
                                         stride=block['stride'], expansion_ratio=block['expansion_ratio'],
                                         squeeze_ratio=block['squeeze_ratio'],
-                                        dropout=0))
+                                        dropout=0)) ## pull in configuration for block from dictionary
 
-        input_size = feature_dim_after_conv(input_size, stride=block['stride'])
+        input_size = feature_dim_after_conv(input_size, stride=block['stride']) ## feature map size will only reduce at a non-repeating block
 
-        if block['repeats'] > 0:
+        if block['repeats'] > 0: ## Block repeats
             InvMobileBlock = InvertedMobileResidualBlock(input_size=input_size,
                                                          input_channels=block['output_channels'],
                                                          output_channels=block['output_channels'],
                                                          kernel_size=block['kernel_size'],
-                                                         stride=1,
+                                                         stride=1, ## stride is always 1 in a repeat block
                                                          expansion_ratio=block['expansion_ratio'],
                                                          squeeze_ratio=block['squeeze_ratio'], dropout=0)
 
