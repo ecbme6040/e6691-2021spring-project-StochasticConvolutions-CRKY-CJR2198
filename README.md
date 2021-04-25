@@ -42,7 +42,7 @@ The folder 'utils' contains the 'utils.py' file which contains the declaration f
 
 ## Model Implementation Validation
 
-The 'model_validation' folder contains the 'EfficientNetValidation.py' file with the code used to validate the efficientnet implementation.
+The 'model_validation' folder in the 'Project Code' directory contains the 'EfficientNetValidation.py' file with the code used to validate the efficientnet implementation.
 
 ## Figures
 
