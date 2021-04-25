@@ -50,3 +50,119 @@ The 'figures' folder contains a sampling of graphed model results.
 
 The 'results' folder contains the collected per-epoch results for the model training runs, organized by base model type (B0 or B4). 'Base' folders are the base model runs, the other runs are named corresponding to the model type 'full split','stochastic stem' etc.
 
+
+## Directory Treee
+
+'''
++---figures
+|       All Models Compared.jpg
+|       b0FullSplitVsBaseSpreadFull.jpg
+|       b0OfficialvsProjectSpread.jpg
+|       b0StochsaticSkipVsBaseSpreadFull.jpg
+|       b0StochsaticStemVs32BaseSpread.jpg
+|       b0StochsaticStemVs64BaseSpread.jpg
+|       b0TTAFullSplitStochastic.jpg
+|       b4OfficialvsProjectSpread.jpg
+|       b4StochsaticStemVs48BaseSpread.jpg
+|       ValidationResults.png
+|       
++---Notebooks
+|   +---data_preparation
+|   |       Data Preparation.ipynb
+|   |       Resize Images.ipynb
+|   |       
+|   +---illustration
+|   |       Melanoma Data Augmentation Illsutration Notebook.ipynb
+|   |       
+|   \---results_analysis
+|           Results Analysis Workbook.ipynb
+|           
++---Project Code
+|   |   TrainScript.py
+|   |   
+|   +---model_files
+|   |   |   efficientnet_model.py
+|   |   |   layers.py
+|   |   |   model_architectures.py
+|   |   |   
+|   |   \---__pycache__
+|   |           layers.cpython-37.pyc
+|   |           model_architectures.cpython-37.pyc
+|   |           
+|   +---model_validation
+|   |       EfficientNetValidation.py
+|   |       
+|   \---utils
+|           utils.py
+|           
+\---results
+    +---B0
+    |   +---base
+    |   |       base10_per_epoch.csv
+    |   |       base11_per_epoch.csv
+    |   |       base12_per_epoch.csv
+    |   |       base13_per_epoch.csv
+    |   |       base14_per_epoch.csv
+    |   |       base1_per_epoch.csv
+    |   |       base2_per_epoch.csv
+    |   |       base3_per_epoch.csv
+    |   |       base4_per_epoch.csv
+    |   |       base5_per_epoch.csv
+    |   |       base6_per_epoch.csv
+    |   |       base7_per_epoch.csv
+    |   |       base8_per_epoch.csv
+    |   |       base9_per_epoch.csv
+    |   |       
+    |   +---base 64 input channels
+    |   |       b0_base_64_channel0_per_epoch.csv
+    |   |       b0_base_64_channel1_per_epoch.csv
+    |   |       b0_base_64_channel2_per_epoch.csv
+    |   |       b0_base_64_channel3_per_epoch.csv
+    |   |       b0_base_64_channel4_per_epoch.csv
+    |   |       
+    |   +---full split
+    |   |       b0_fullsplit0_per_epoch.csv
+    |   |       b0_fullsplit1_per_epoch.csv
+    |   |       b0_fullsplit2_per_epoch.csv
+    |   |       b0_fullsplit3_per_epoch.csv
+    |   |       b0_fullsplit4_per_epoch.csv
+    |   |       b0_fullsplit5_per_epoch.csv
+    |   |       b0_fullsplit6_per_epoch.csv
+    |   |       b0_fullsplit7_per_epoch.csv
+    |   |       
+    |   +---full split tta
+    |   |       fs_tta0_per_epoch.csv
+    |   |       fs_tta1_per_epoch.csv
+    |   |       fs_tta2_per_epoch.csv
+    |   |       
+    |   +---stochastic skip
+    |   |       b0_stochasticskip_640_per_epoch.csv
+    |   |       b0_stochasticskip_641_per_epoch.csv
+    |   |       b0_stochasticskip_642_per_epoch.csv
+    |   |       b0_stochasticskip_643_per_epoch.csv
+    |   |       b0_stochasticskip_644_per_epoch.csv
+    |   |       
+    |   \---stochastic stem
+    |           b0_stochastic_640_per_epoch.csv
+    |           b0_stochastic_641_per_epoch.csv
+    |           b0_stochastic_642_per_epoch.csv
+    |           b0_stochastic_643_per_epoch.csv
+    |           b0_stochastic_644_per_epoch.csv
+    |           b0_stochastic_645_per_epoch.csv
+    |           
+    \---B4
+        +---base
+        |       b4_base0_per_epoch.csv
+        |       b4_base1_per_epoch.csv
+        |       b4_base2_per_epoch.csv
+        |       b4_base3_per_epoch.csv
+        |       b4_base4_per_epoch.csv
+        |       
+        \---stochastic_stem
+                b4_stochastic0_per_epoch.csv
+                b4_stochastic1_per_epoch.csv
+                b4_stochastic2_per_epoch.csv
+                b4_stochastic3_per_epoch.csv
+                b4_stochastic4_per_epoch.csv
+'''
+
